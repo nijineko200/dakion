@@ -1,0 +1,4 @@
+{
+  "name": "Auto Firefox",
+  "postStartCommand": "bash .devcontainer/setup.sh"
+}
