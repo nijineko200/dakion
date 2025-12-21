@@ -1,4 +1,4 @@
 {
-  "name": "Auto Firefox",
+  "name": "dakion",
   "postStartCommand": "bash .devcontainer/setup.sh"
 }
