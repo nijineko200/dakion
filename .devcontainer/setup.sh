@@ -7,11 +7,11 @@ docker restart my-browser my-guacamole || {
   docker exec -u 0 my-browser apk add --no-cache font-ipa
 }
 
-# 2. バックグラウンドで「1分待機」と「維持スクリプト」を予約
+# 2. バックグラウンドで「1分待機」と「維持スクリプト」を実行
 (
   sleep 60
   
-  # 維持スクリプト本体の作成
+  # 維持スクリプト本体の作成（パスを固定）
   cat << 'INNER_EOF' > /workspaces/dakion/stay_alive_ipad.sh
 #!/bin/bash
 echo "=== iPad操作維持モード 実行中 (4分間隔) ==="
@@ -27,6 +27,6 @@ done
 INNER_EOF
 
   chmod +x /workspaces/dakion/stay_alive_ipad.sh
-  # 維持スクリプトの実行（ログをファイルに書き出す）
+  # 実行ログをファイルに保存
   /workspaces/dakion/stay_alive_ipad.sh > /workspaces/dakion/stay_alive.log 2>&1
 ) & 
