@@ -1,0 +1,31 @@
+name: Remote Setup Trigger
+on:
+  push:
+    paths:
+      - 'trigger.txt'
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Codespace to be ready
+        run: |
+          for i in {1..12}; do
+            STATUS=$(gh codespace list --json name,state -q ".[] | select(.name==\"miniature-telegram-x5746vgvjq9vhpp4x\") | .state")
+            if [ "$STATUS" == "Available" ]; then
+              echo "Codespace is ready!"
+              exit 0
+            fi
+            echo "Waiting for Codespace... (status: $STATUS)"
+            sleep 10
+          done
+          echo "Timeout waiting for Codespace"
+          exit 1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run setup script via SSH
+        run: |
+          gh codespace ssh -c miniature-telegram-x5746vgvjq9vhpp4x "bash /workspaces/dakion/.devcontainer/setup.sh"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
