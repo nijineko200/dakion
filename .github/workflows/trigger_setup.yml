@@ -11,7 +11,6 @@ jobs:
     steps:
       - name: Wait for Codespace to be ready
         run: |
-          # Codespaceが「Available」になるまで最大2分間待機
           for i in {1..12}; do
             STATUS=$(gh codespace list --json name,state -q ".[] | select(.name | contains(\"miniature-telegram\")) | .state")
             if [ "$STATUS" == "Available" ]; then
@@ -21,22 +20,24 @@ jobs:
             echo "Waiting for Codespace... current status: $STATUS"
             sleep 10
           done
-          echo "Timeout waiting for Codespace"
           exit 1
         env:
           GH_TOKEN: ${{ secrets.MY_TOKEN }}
 
-      - name: Force Public Port and Run Script
+      - name: Start Services and Then Force Public
         run: |
-          # 接続対象のCodespace名を取得
           NAME=$(gh codespace list --json name -q ".[] | select(.name | contains(\"miniature-telegram\")) | .name")
           
-          echo "Setting port 8080 to PUBLIC..."
-          # ★ここが重要：8080ポートを強制的にPublic（全体公開）に設定します
-          gh codespace ports visibility 8080:public -c "$NAME"
-          
           echo "Starting setup script..."
-          # SSHで入り、不眠スクリプトを裏側(nohup)で実行。実行後は即座にActionsを終了させる
+          # 1. まずスクリプトを裏で起動させる
           gh codespace ssh -c "$NAME" -- -o StrictHostKeyChecking=no "nohup bash /workspaces/dakion/.devcontainer/setup.sh > /dev/null 2>&1 &"
+          
+          echo "Waiting for services to start..."
+          # 2. 起動するまで少し待つ（ここが重要）
+          sleep 15
+          
+          echo "Setting port 8080 to PUBLIC..."
+          # 3. 起動したのを確認してからPublicにする
+          gh codespace ports visibility 8080:public -c "$NAME"
         env:
           GH_TOKEN: ${{ secrets.MY_TOKEN }}
