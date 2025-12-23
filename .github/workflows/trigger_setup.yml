@@ -13,15 +13,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.MY_TOKEN }}
         run: |
-          # 1. 確実に存在する「list」コマンドで、名前を指定して無理やり起こします
-          gh codespace list -u miniature-telegram-x5746vgvjq9vhpp4x
-          
-          # 2. 起動時間をたっぷり確保します
+          gh codespace list
           sleep 60
-          
-          # 3. サービスを起動します（名前を直接指定）
           gh codespace ssh -c miniature-telegram-x5746vgvjq9vhpp4x -- -o StrictHostKeyChecking=no "nohup bash /workspaces/dakion/.devcontainer/setup.sh > /dev/null 2>&1 &"
-          
-          # 4. ポートを全体公開にします
-          sleep 20
+          sleep 30
           gh codespace ports visibility 8080:public -c miniature-telegram-x5746vgvjq9vhpp4x
