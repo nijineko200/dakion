@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Wait for Codespace to be ready
         run: |
-          # マシンが「Available」になるまで最大2分間、10秒おきにチェックします
+          # Availableになるまでチェック
           for i in {1..12}; do
             STATUS=$(gh codespace list --json name,state -q ".[] | select(.name | contains(\"miniature-telegram\")) | .state")
             if [ "$STATUS" == "Available" ]; then
@@ -28,8 +28,9 @@ jobs:
 
       - name: Run setup script via SSH
         run: |
-          # 準備ができたらSSHで入り、不眠設定を実行します
+          # 接続先を特定
           NAME=$(gh codespace list --json name -q ".[] | select(.name | contains(\"miniature-telegram\")) | .name")
-          gh codespace ssh -c "$NAME" "bash /workspaces/dakion/.devcontainer/setup.sh"
+          # ★SSHの確認を自動でスキップするオプションを追加
+          gh codespace ssh -c "$NAME" -- -o StrictHostKeyChecking=no "bash /workspaces/dakion/.devcontainer/setup.sh"
         env:
           GH_TOKEN: ${{ secrets.MY_TOKEN }}
