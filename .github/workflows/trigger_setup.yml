@@ -10,18 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Process
-        run: |
-          # 1. まずCodespaceを起動させる（wakeupはオプション無しで動かします）
-          gh codespace wakeup --codespace miniature-telegram-x5746vgvjq9vhpp4x
-          
-          # 2. 起動するまで待つ
-          sleep 30
-          
-          # 3. サービスを起動
-          gh codespace ssh -c miniature-telegram-x5746vgvjq9vhpp4x -- -o StrictHostKeyChecking=no "nohup bash /workspaces/dakion/.devcontainer/setup.sh > /dev/null 2>&1 &"
-          
-          # 4. 少し待ってから公開設定にする
-          sleep 20
-          gh codespace ports visibility 8080:public -c miniature-telegram-x5746vgvjq9vhpp4x
         env:
           GH_TOKEN: ${{ secrets.MY_TOKEN }}
+        run: |
+          # 1. 確実に存在する「list」コマンドで、名前を指定して無理やり起こします
+          gh codespace list -u miniature-telegram-x5746vgvjq9vhpp4x
+          
+          # 2. 起動時間をたっぷり確保します
+          sleep 60
+          
+          # 3. サービスを起動します（名前を直接指定）
+          gh codespace ssh -c miniature-telegram-x5746vgvjq9vhpp4x -- -o StrictHostKeyChecking=no "nohup bash /workspaces/dakion/.devcontainer/setup.sh > /dev/null 2>&1 &"
+          
+          # 4. ポートを全体公開にします
+          sleep 20
+          gh codespace ports visibility 8080:public -c miniature-telegram-x5746vgvjq9vhpp4x
