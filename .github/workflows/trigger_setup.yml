@@ -9,35 +9,41 @@ jobs:
   execute:
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for Codespace to be ready
+      - name: Wake up and Wait for Codespace
         run: |
-          for i in {1..12}; do
+          # 1. まずCodespaceを強制的に「起動」させる
+          NAME=$(gh codespace list --json name -q ".[] | select(.name | contains(\"miniature-telegram\")) | .name")
+          echo "Waking up Codespace: $NAME"
+          gh codespace wakeup -c "$NAME"
+          
+          # 2. 「Available」になるまで最大5分間（30回）じっくり待機
+          for i in {1..30}; do
             STATUS=$(gh codespace list --json name,state -q ".[] | select(.name | contains(\"miniature-telegram\")) | .state")
             if [ "$STATUS" == "Available" ]; then
-              echo "Codespace is ready!"
+              echo "Codespace is now Available!"
               exit 0
             fi
-            echo "Waiting for Codespace... current status: $STATUS"
+            echo "Current status: $STATUS... waiting 10s (Attempt $i/30)"
             sleep 10
           done
+          echo "Codespace failed to wake up"
           exit 1
         env:
           GH_TOKEN: ${{ secrets.MY_TOKEN }}
 
-      - name: Start Services and Then Force Public
+      - name: Start Services and Force Public
         run: |
           NAME=$(gh codespace list --json name -q ".[] | select(.name | contains(\"miniature-telegram\")) | .name")
           
-          echo "Starting setup script..."
-          # 1. まずスクリプトを裏で起動させる
+          echo "Starting setup script via SSH..."
+          # 裏側でFirefoxなどを起動
           gh codespace ssh -c "$NAME" -- -o StrictHostKeyChecking=no "nohup bash /workspaces/dakion/.devcontainer/setup.sh > /dev/null 2>&1 &"
           
-          echo "Waiting for services to start..."
-          # 2. 起動するまで少し待つ（ここが重要）
-          sleep 15
+          echo "Waiting 20 seconds for services to settle..."
+          sleep 20
           
           echo "Setting port 8080 to PUBLIC..."
-          # 3. 起動したのを確認してからPublicにする
+          # 最後にポートを全体公開にする
           gh codespace ports visibility 8080:public -c "$NAME"
         env:
           GH_TOKEN: ${{ secrets.MY_TOKEN }}
