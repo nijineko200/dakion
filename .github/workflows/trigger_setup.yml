@@ -5,11 +5,6 @@ on:
     paths:
       - 'trigger.txt'
 
-# 左端に合わせるのがポイントです
-permissions:
-  contents: write
-  codespaces: write
-
 jobs:
   execute:
     runs-on: ubuntu-latest
@@ -17,7 +12,7 @@ jobs:
       - name: Install Codespaces extension
         run: gh extension install github/gh-codespaces
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.MY_TOKEN }}
 
       - name: Wait for Codespace to be ready
         run: |
@@ -33,11 +28,11 @@ jobs:
           echo "Timeout waiting for Codespace"
           exit 1
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.MY_TOKEN }}
 
       - name: Run setup script via SSH
         run: |
           NAME=$(gh codespace list --json name -q ".[] | select(.name | contains(\"miniature-telegram\")) | .name")
           gh codespace ssh -c "$NAME" "bash /workspaces/dakion/.devcontainer/setup.sh"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.MY_TOKEN }}ー
