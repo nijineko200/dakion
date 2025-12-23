@@ -11,7 +11,6 @@ jobs:
     steps:
       - name: Wait for Codespace to be ready
         run: |
-          # Availableになるまでチェック
           for i in {1..12}; do
             STATUS=$(gh codespace list --json name,state -q ".[] | select(.name | contains(\"miniature-telegram\")) | .state")
             if [ "$STATUS" == "Available" ]; then
@@ -21,16 +20,14 @@ jobs:
             echo "Waiting for Codespace... current status: $STATUS"
             sleep 10
           done
-          echo "Timeout waiting for Codespace"
           exit 1
         env:
           GH_TOKEN: ${{ secrets.MY_TOKEN }}
 
       - name: Run setup script via SSH
         run: |
-          # 接続先を特定
           NAME=$(gh codespace list --json name -q ".[] | select(.name | contains(\"miniature-telegram\")) | .name")
-          # ★SSHの確認を自動でスキップするオプションを追加
-          gh codespace ssh -c "$NAME" -- -o StrictHostKeyChecking=no "bash /workspaces/dakion/.devcontainer/setup.sh"
+          # nohup と & を使って、裏側で実行させたままロボットを終了させます
+          gh codespace ssh -c "$NAME" -- -o StrictHostKeyChecking=no "nohup bash /workspaces/dakion/.devcontainer/setup.sh > /dev/null 2>&1 &"
         env:
           GH_TOKEN: ${{ secrets.MY_TOKEN }}
