@@ -11,16 +11,15 @@ jobs:
     steps:
       - name: Wake up and Wait for Codespace
         run: |
-          # 1. Codespace名を特定
-          NAME=$(gh codespace list --json name -q ".[] | select(.name | contains(\"miniature-telegram\")) | .name")
+          # 名前を直接指定して、取得ミスをゼロにします
+          NAME="miniature-telegram-x5746vgvjq9vhpp4x"
           echo "Waking up Codespace: $NAME"
           
-          # 2. 修正：wakeupコマンドは -c ではなく --codespace を使うのが正解でした
           gh codespace wakeup --codespace "$NAME"
           
-          # 3. 「Available」になるまで最大5分間待機
+          # Availableになるまで最大5分間待機
           for i in {1..30}; do
-            STATUS=$(gh codespace list --json name,state -q ".[] | select(.name | contains(\"miniature-telegram\")) | .state")
+            STATUS=$(gh codespace list --json name,state -q ".[] | select(.name == \"$NAME\") | .state")
             if [ "$STATUS" == "Available" ]; then
               echo "Codespace is now Available!"
               exit 0
@@ -28,14 +27,13 @@ jobs:
             echo "Current status: $STATUS... waiting 10s (Attempt $i/30)"
             sleep 10
           done
-          echo "Codespace failed to wake up"
           exit 1
         env:
           GH_TOKEN: ${{ secrets.MY_TOKEN }}
 
       - name: Start Services and Force Public
         run: |
-          NAME=$(gh codespace list --json name -q ".[] | select(.name | contains(\"miniature-telegram\")) | .name")
+          NAME="miniature-telegram-x5746vgvjq9vhpp4x"
           
           echo "Starting setup script via SSH..."
           gh codespace ssh -c "$NAME" -- -o StrictHostKeyChecking=no "nohup bash /workspaces/dakion/.devcontainer/setup.sh > /dev/null 2>&1 &"
@@ -44,7 +42,6 @@ jobs:
           sleep 25
           
           echo "Setting port 8080 to PUBLIC..."
-          # ここでも確実に名前を指定してPublic化します
           gh codespace ports visibility 8080:public -c "$NAME"
         env:
           GH_TOKEN: ${{ secrets.MY_TOKEN }}
