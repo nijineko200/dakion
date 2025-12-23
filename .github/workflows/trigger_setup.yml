@@ -9,20 +9,16 @@ jobs:
   execute:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Codespaces extension
-        run: gh extension install github/gh-codespaces
-        env:
-          GH_TOKEN: ${{ secrets.MY_TOKEN }}
-
       - name: Wait for Codespace to be ready
         run: |
+          # マシンが「Available」になるまで最大2分間、10秒おきにチェックします
           for i in {1..12}; do
             STATUS=$(gh codespace list --json name,state -q ".[] | select(.name | contains(\"miniature-telegram\")) | .state")
             if [ "$STATUS" == "Available" ]; then
               echo "Codespace is ready!"
               exit 0
             fi
-            echo "Waiting for Codespace... status is $STATUS"
+            echo "Waiting for Codespace... current status: $STATUS"
             sleep 10
           done
           echo "Timeout waiting for Codespace"
@@ -32,7 +28,8 @@ jobs:
 
       - name: Run setup script via SSH
         run: |
+          # 準備ができたらSSHで入り、不眠設定を実行します
           NAME=$(gh codespace list --json name -q ".[] | select(.name | contains(\"miniature-telegram\")) | .name")
           gh codespace ssh -c "$NAME" "bash /workspaces/dakion/.devcontainer/setup.sh"
         env:
-          GH_TOKEN: ${{ secrets.MY_TOKEN }}ー
+          GH_TOKEN: ${{ secrets.MY_TOKEN }}
