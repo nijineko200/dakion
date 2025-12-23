@@ -11,12 +11,12 @@ jobs:
     steps:
       - name: Wake up and Wait for Codespace
         run: |
-          # 1. まずCodespaceを強制的に「起動」させる
+          # 1. まず強制的に「起動」命令を送る
           NAME=$(gh codespace list --json name -q ".[] | select(.name | contains(\"miniature-telegram\")) | .name")
           echo "Waking up Codespace: $NAME"
           gh codespace wakeup -c "$NAME"
           
-          # 2. 「Available」になるまで最大5分間（30回）じっくり待機
+          # 2. 「Available」になるまで最大5分間（30回）粘り強く待機
           for i in {1..30}; do
             STATUS=$(gh codespace list --json name,state -q ".[] | select(.name | contains(\"miniature-telegram\")) | .state")
             if [ "$STATUS" == "Available" ]; then
@@ -36,14 +36,15 @@ jobs:
           NAME=$(gh codespace list --json name -q ".[] | select(.name | contains(\"miniature-telegram\")) | .name")
           
           echo "Starting setup script via SSH..."
-          # 裏側でFirefoxなどを起動
+          # 裏側でブラウザなどを起動
           gh codespace ssh -c "$NAME" -- -o StrictHostKeyChecking=no "nohup bash /workspaces/dakion/.devcontainer/setup.sh > /dev/null 2>&1 &"
           
-          echo "Waiting 20 seconds for services to settle..."
-          sleep 20
+          echo "Waiting 25 seconds for services to settle..."
+          # 起動完了まで少し長めに待つ
+          sleep 25
           
           echo "Setting port 8080 to PUBLIC..."
-          # 最後にポートを全体公開にする
+          # ★ここで8080ポートを誰でも見れる状態（Public）に強制変更します
           gh codespace ports visibility 8080:public -c "$NAME"
         env:
           GH_TOKEN: ${{ secrets.MY_TOKEN }}
